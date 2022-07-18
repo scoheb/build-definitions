@@ -11,6 +11,8 @@ metadata:
     app.kubernetes.io/version: "0.2"
 
 spec:
+  debug:
+    breakpoint: ["onFailure"]
   description: Verify the enterprise contract is met
   params:
     - name: IMAGES
@@ -38,7 +40,7 @@ spec:
     - name: REKOR_HOST
       type: string
       description: Rekor host for transparency log lookups
-      default: https://rekor.sigstore.dev
+      default: ""
 
     - name: SSL_CERT_DIR
       type: string
@@ -62,16 +64,22 @@ spec:
 
   steps:
     - name: version
-      image: appstudio-utils
+      image: quay.io/redhat-appstudio/appstudio-utils:e2cf380c9debf84605149fe8a712acc82586f42b
       command: [ec]
+      workingDir: /workspace
       args:
         - version
+      env:
+        - name: HOME
+          value: "/tekton/home"
     - name: verify
-      image: appstudio-utils
+      image: quay.io/redhat-appstudio/appstudio-utils:e2cf380c9debf84605149fe8a712acc82586f42b
       command: [ec]
+      workingDir: /workspace
       args:
-        - eval
-        - "--input"
+        - validate
+        - image
+        - "--json-input"
         - "$(params.IMAGES)"
         - "--policy"
         - "$(params.POLICY_CONFIGURATION)"
@@ -79,11 +87,12 @@ spec:
         - "$(params.PUBLIC_KEY)"
         - "--rekor-url"
         - "$(params.REKOR_HOST)"
-        - "--strict"
-        - "$(params.STRICT)"
+        - "--strict=$(params.STRICT)"
         - "--output-file"
         - "$(results.REPORT.path)"
       env:
+        - name: HOME
+          value: "/tekton/home"
         - name: SSL_CERT_DIR
           # The Tekton Operator automatically sets the SSL_CERT_DIR env to the value below but,
           # of course, without the $(param.SSL_CERT_DIR) bit. When a Task Step sets it to a
