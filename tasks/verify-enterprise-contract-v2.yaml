@@ -62,7 +62,8 @@ spec:
 
   steps:
     - name: version
-      image: quay.io/redhat-appstudio/appstudio-utils:7151d2167bbb7a73af9f45049bba4e0e477f73f0
+      #image: quay.io/redhat-appstudio/appstudio-utils:7151d2167bbb7a73af9f45049bba4e0e477f73f0
+      image: quay.io/jstuart/appstudio-utils:ec-signoff
       command: [ec]
       workingDir: /workspace
       args:
@@ -71,7 +72,8 @@ spec:
         - name: HOME
           value: "/tekton/home"
     - name: validate
-      image: quay.io/redhat-appstudio/appstudio-utils:7151d2167bbb7a73af9f45049bba4e0e477f73f0
+      #image: quay.io/redhat-appstudio/appstudio-utils:7151d2167bbb7a73af9f45049bba4e0e477f73f0
+      image: quay.io/jstuart/appstudio-utils:ec-signoff
       command: [ec]
       workingDir: /workspace
       args:
