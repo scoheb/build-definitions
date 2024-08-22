@@ -59,16 +59,41 @@ spec:
       type: string
       description: The name of the key in the ConfigMap that contains the CA bundle data.
       default: "ca-bundle.crt"
+    - name: REDUCE_SNAPSHOT
+      type: string
+      description: Reduce the Snapshot to only the component whose build caused the Snapshot to be created
+      default: "false"
+    - name: PIPELINERUN_ID
+      type: string
+      description: PipelineRun ID
+      default: "$(context.pipelineRun.name)"
   results:
     - name: TEST_OUTPUT
       value: "$(tasks.verify.results.TEST_OUTPUT)"
   tasks:
+    - name: reduce-snapshot
+      params:
+        - name: SNAPSHOT
+          value: "$(params.SNAPSHOT)"
+        - name: REDUCE_SNAPSHOT
+          value: "$(params.REDUCE_SNAPSHOT)"
+        - name: PIPELINERUN_ID
+          value: "$(params.PIPELINERUN_ID)"
+      taskRef:
+        resolver: "git"
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/build-definitions
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: task/reduce-snapshot/0.1/reduce-snapshot.yaml
     - name: verify
       params:
         - name: POLICY_CONFIGURATION
           value: "$(params.POLICY_CONFIGURATION)"
         - name: IMAGES
-          value: "$(params.SNAPSHOT)"
+          value: "$(tasks.reduce-snapshot.results.SNAPSHOT)"
         - name: SSL_CERT_DIR
           value: "$(params.SSL_CERT_DIR)"
         # It's confusing for users to see a passing taskrun that represents a failing EC test.
@@ -96,3 +121,5 @@ spec:
             value: verify-enterprise-contract
           - name: kind
             value: task
+      runAfter:
+        - reduce-snapshot
